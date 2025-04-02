@@ -315,7 +315,7 @@ aws rds create-db-instance \
     --db-instance-identifier "$APP_NAME-db" \
     --db-instance-class $RDS_INSTANCE_TYPE \
     --engine postgres \
-    --engine-version 14.5 \
+    --engine-version 13.7 \
     --allocated-storage 20 \
     --storage-type gp2 \
     --master-username "dbadmin" \
