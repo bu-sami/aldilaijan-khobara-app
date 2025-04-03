@@ -5,7 +5,7 @@
 
 # First, find the deployment script
 echo "Searching for the deployment script..."
-DEPLOY_SCRIPT=$(find /home -name "deploy-aws-infrastructure.sh" 2>/dev/null | head -1)
+DEPLOY_SCRIPT=$(find . -name "deploy-aws-infrastructure.sh" 2>/dev/null | head -1)
 
 if [ -z "$DEPLOY_SCRIPT" ]; then
     echo "Error: Could not find the deployment script. Please provide the full path to the script:"
