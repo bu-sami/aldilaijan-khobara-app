@@ -51,7 +51,7 @@ aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_R
 
 # Build and push backend Docker image
 echo "Building backend Docker image..."
-cd /home/ubuntu/aldilaijan-khobara-app/backend
+cd /e/aldilaijan-khobara-app/backend
 
 # Create Dockerfile for backend
 cat > Dockerfile << EOF

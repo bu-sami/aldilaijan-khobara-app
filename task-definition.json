@@ -1,0 +1,32 @@
+{
+    "family": "aldilaijan-khobara-task",
+    "executionRoleArn": "arn:aws:iam::115313776806:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "containerDefinitions": [
+        {
+            "name": "aldilaijan-khobara-container",
+            "image": "115313776806.dkr.ecr.me-south-1.amazonaws.com/aldilaijan-khobara-ecr-repo:latest",
+            "essential": true,
+            "portMappings": [
+                {
+                    "containerPort": 3000,
+                    "hostPort": 3000,
+                    "protocol": "tcp"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/aldilaijan-khobara",
+                    "awslogs-region": "me-south-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512"
+}

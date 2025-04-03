@@ -1,0 +1,71 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region me-south-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.me-south-1.amazonaws.com
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.me-south-1.amazonaws.com/aldilaijan-khobara-ecr-repo
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Writing image definitions file...
+      - |
+        if ! aws ecs describe-task-definition --task-definition aldilaijan-khobara-task &>/dev/null; then
+          echo "Creating task definition JSON since it does not exist..."
+          cat <<TASKDEF > taskdef.json
+{
+    "family": "aldilaijan-khobara-task",
+    "executionRoleArn": "arn:aws:iam::$AWS_ACCOUNT_ID:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "containerDefinitions": [
+        {
+            "name": "aldilaijan-khobara-container",
+            "image": "$REPOSITORY_URI:latest",
+            "essential": true,
+            "portMappings": [
+                {
+                    "containerPort": 3000,
+                    "hostPort": 3000,
+                    "protocol": "tcp"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/aldilaijan-khobara",
+                    "awslogs-region": "me-south-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512"
+}
+TASKDEF
+        else
+          echo "Using existing task definition..."
+          aws ecs describe-task-definition --task-definition aldilaijan-khobara-task --query taskDefinition > taskdef.json
+        fi
+      - cat taskdef.json
+      - echo '{"ImageURI":"$REPOSITORY_URI:$IMAGE_TAG"}' > imageDefinition.json
+artifacts:
+  files:
+    - imageDefinition.json
+    - taskdef.json
+    - appspec.yml
